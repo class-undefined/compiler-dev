@@ -1,0 +1,32 @@
+use std::str::FromStr;
+use crate::ast::*;
+grammar;
+match {
+    // 跳过空白符和注释
+    r"\s*" => {},
+    r"//[^\n\r]*[\n\r]*" => {},
+    _
+}
+pub Expr: Box<Expr> = {
+    UnaryExpr
+}
+
+UnaryExpr: Box<Expr> = {
+    PrimaryExp,
+    UnaryOp UnaryExpr => Box::new(Expr::UnaryOp(<>))
+}
+
+PrimaryExp: Box<Expr> = {
+    Number => Box::new(Expr::Number(<>)),
+    "(" <Expr> ")"
+}
+
+UnaryOp: Op = {
+    "+" => Op::Add,
+    "-" => Op::Sub,
+    "!" => Op::Not
+}
+
+Number: i32 = {
+    r"[0-9]+" => i32::from_str(<>).unwrap()
+}
