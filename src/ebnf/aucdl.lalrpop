@@ -1,0 +1,98 @@
+use std::str::FromStr;
+use crate::ast::*;
+grammar;
+match {
+    // 跳过空白符和注释
+    r"\s*" => {},
+    r"\*[^\n\r]*[\n\r]*" => {},
+    r"\.PARAM" => {},
+    _
+}
+
+pub Subckt: Subckt = {
+    ".SUBCKT" <name:Identifier> <pins:Terminals> <devices:Devices> => Subckt {<>}
+}
+
+pub Devices: Vec<Device> = {
+    <mut v: Devices> <d: Device> => {
+        v.push(d);
+        v
+    },
+    => v
+}
+
+pub Device: Device = {
+    <name:Identifier> <terminals:Terminals> <num:Number> <unit:Unit> <model:SpecialModelName> => {
+        Device::from_cp(name, model, terminals, num, unit)
+    },
+    <name:Identifier> <terminals:Terminals> <model:Identifier> <params:Params> => Device{<>}
+}
+
+pub Includes: Vec<String> = {
+    <mut v:Includes> ".INC" <path: Path> => {
+        v.push(path);
+        v
+    },
+    => Vec::new(),
+}
+
+
+Path: String = {
+    <p:r"/[^ \n\t\r\f]+"> => p.to_string(),
+}
+
+Params: Vec<Param> = {
+    <mut v:Params> <param:Param> => {
+        v.push(param);
+        v
+    },
+    => Vec::new(),
+}
+
+Param: Param = {
+    <name:Identifier> "=" <num:Number> => Param::new(name, num, None),
+    <name:Identifier> "=" <num:Number> <unit:Unit> => Param::new(name, num, Some(unit)),
+}
+
+Terminals: Vec<String> = {
+    <mut v:Terminals> <t:Terminal> => {
+        v.push(t);
+        v
+    },
+    => Vec::new(),
+}
+
+Terminal: String = {
+    <id:Identifier> => id,
+    <id:Identifier> "<" <num:Number> ">" => {
+        format!("{}<{}>", id, num)
+    },
+};
+
+SpecialModelName: String = {
+    "$[" <Identifier> "]"
+}
+
+
+Identifier: String = {
+    <id: r"[a-zA-Z_][a-zA-Z0-9_-]*"> "<" <num:Number> ">" => {
+        format!("{}<{}>", id, num)
+    },
+    <id: r"[a-zA-Z_][a-zA-Z0-9_-]*"> => id.to_string(),
+};
+
+
+Unit: Unit = {
+    "n" => Unit::n,
+    "u" => Unit::u,
+    "m" => Unit::m,
+    "k" => Unit::k,
+    "M" => Unit::M,
+    "G" => Unit::G,
+    "T" => Unit::T,
+
+}
+
+Number: i32 = {
+    r"[0-9]+" => i32::from_str(<>).unwrap()
+}
