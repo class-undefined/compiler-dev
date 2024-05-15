@@ -8,12 +8,23 @@ match {
     _
 }
 pub Expr: Box<Expr> = {
-    UnaryExpr
+    AddExpr
+}
+
+AddExpr: Box<Expr> = {
+    <MulExpr>,
+    <AddExpr> <AddOp> <MulExpr> => Box::new(Expr::BinaryOp(<>))
+}
+
+MulExpr: Box<Expr> = {
+    UnaryExpr,
+    <MulExpr> <BinaryOp> <UnaryExpr> => Box::new(Expr::BinaryOp(<>))
 }
 
 UnaryExpr: Box<Expr> = {
     PrimaryExp,
-    UnaryOp UnaryExpr => Box::new(Expr::UnaryOp(<>))
+    UnaryOp UnaryExpr => Box::new(Expr::UnaryOp(<>)),
+
 }
 
 PrimaryExp: Box<Expr> = {
@@ -25,6 +36,17 @@ UnaryOp: Op = {
     "+" => Op::Add,
     "-" => Op::Sub,
     "!" => Op::Not
+}
+
+BinaryOp: Op = {
+    "*" => Op::Mul,
+    "/" => Op::Div,
+    "%" => Op::Mod
+}
+
+AddOp: Op = {
+    "+" => Op::Add,
+    "-" => Op::Sub
 }
 
 Number: i32 = {
