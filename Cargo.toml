@@ -1,5 +1,5 @@
 [package]
-name = "aucdl-parser"
+name = "compiler-dev"
 version = "0.1.0"
 edition = "2021"
 
