@@ -64,7 +64,31 @@ impl IRExprGen {
                         self.instructions
                             .push(format!("{} = mod {}, {}", operand, left, right));
                     }
-                    _ => panic!("unreachable"),
+                    Op::Eq => {
+                        self.instructions
+                            .push(format!("{} = eq {}, {}", operand, left, right));
+                    }
+                    Op::Ne => {
+                        self.instructions
+                            .push(format!("{} = ne {}, {}", operand, left, right));
+                    }
+                    Op::Lt => {
+                        self.instructions
+                            .push(format!("{} = lt {}, {}", operand, left, right));
+                    }
+                    Op::Le => {
+                        self.instructions
+                            .push(format!("{} = le {}, {}", operand, left, right));
+                    }
+                    Op::Gt => {
+                        self.instructions
+                            .push(format!("{} = gt {}, {}", operand, left, right));
+                    }
+                    Op::Ge => {
+                        self.instructions
+                            .push(format!("{} = ge {}, {}", operand, left, right));
+                    }
+                    _ => panic!("unreachable {:?}", op),
                     // 其他操作
                 }
                 operand

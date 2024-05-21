@@ -8,28 +8,66 @@ match {
     _
 }
 pub Expr: Box<Expr> = {
-    AddExpr
+    LOrExpr
 }
 
+
+LOrExpr: Box<Expr> = {
+    <lhs:LOrExpr> "||" <rhs:LAndExpr> => Box::new(Expr::BinaryOp(lhs, Op::Or, rhs)),
+    LAndExpr,
+}
+
+LAndExpr: Box<Expr> = {
+    <lhs:LAndExpr> "&&" <rhs:EqExpr> => Box::new(Expr::BinaryOp(lhs, Op::And, rhs)),
+    EqExpr,
+}
+
+
+EqExpr: Box<Expr> = {
+    <EqExpr> <EqOp> <RelExpr> => Box::new(Expr::BinaryOp(<>)),
+    RelExpr,
+}
+
+RelExpr: Box<Expr> = {
+    <RelExpr> <RelOp> <AddExpr> => Box::new(Expr::BinaryOp(<>)),
+    AddExpr,
+}
+
+
+
 AddExpr: Box<Expr> = {
+    <lhs:AddExpr> "+" <rhs:MulExpr> => Box::new(Expr::BinaryOp(lhs, Op::Add, rhs)),
+    <lhs:AddExpr> "-" <rhs:MulExpr> => Box::new(Expr::BinaryOp(lhs, Op::Sub, rhs)),
     <MulExpr>,
-    <AddExpr> <AddOp> <MulExpr> => Box::new(Expr::BinaryOp(<>))
 }
 
 MulExpr: Box<Expr> = {
+    <MulExpr> <BinaryOp> <UnaryExpr> => Box::new(Expr::BinaryOp(<>)),
     UnaryExpr,
-    <MulExpr> <BinaryOp> <UnaryExpr> => Box::new(Expr::BinaryOp(<>))
 }
 
 UnaryExpr: Box<Expr> = {
-    PrimaryExp,
     UnaryOp UnaryExpr => Box::new(Expr::UnaryOp(<>)),
-
+    PrimaryExpr,
 }
 
-PrimaryExp: Box<Expr> = {
+PrimaryExpr: Box<Expr> = {
     Number => Box::new(Expr::Number(<>)),
     "(" <Expr> ")"
+}
+
+
+
+RelOp: Op = {
+    "<" => Op::Lt,
+    ">" => Op::Gt,
+    "<=" => Op::Le,
+    ">=" => Op::Ge
+}
+
+EqOp: Op = {
+    "==" => Op::Eq,
+    "!=" => Op::Ne
 }
 
 UnaryOp: Op = {
@@ -44,10 +82,7 @@ BinaryOp: Op = {
     "%" => Op::Mod
 }
 
-AddOp: Op = {
-    "+" => Op::Add,
-    "-" => Op::Sub
-}
+
 
 Number: i32 = {
     r"[0-9]+" => i32::from_str(<>).unwrap()
